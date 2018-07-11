@@ -1,7 +1,7 @@
 CILPATH=~/obliv-c
 OBLIVCC=$(CILPATH)/bin/oblivcc
 RUNTIME=$(CILPATH)/_build/libobliv.a
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -D_Float128=double
 LOADLIBES=-lm
 
 ACKPATH=~/absentminded-crypto-kit
@@ -21,6 +21,9 @@ CONNECTION=$(REMOTE_HOST):$(PORT)
 
 clean:
 
+new_full_data:
+	python3 genData.py
+
 
 # test pseudonymization (run genData.py for new data)
 DP_pseudonymize:
@@ -35,7 +38,7 @@ DPO_pseudonymize:
 # test data processing (run after createing pseudonymized data)
 DP_process:
 	$(./process.out)
-	./process.out $(CONNECTION) 1 $(nonidentifiable.csv) $(identifiable.csv) 
+	./process.out $(CONNECTION) 1 $(nonidentifiable.csv) $(pseudonymized.csv) 
 	
 DPO_process:
 	$(./process.out)

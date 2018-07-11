@@ -12,7 +12,7 @@ data = [[i+"@email.com", choice([0,1]), randbelow(100000)] for i in names]
 
 import csv
 
-f = open("data.csv", "w")
+f = open("full_data.csv", "w")
 
 with f:
 
