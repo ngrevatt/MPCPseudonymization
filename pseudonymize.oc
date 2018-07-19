@@ -6,24 +6,28 @@
 #include "dbg.h"
 
 // #include the AES stuff -> how?
+#include "oaes.h"
+// I don't think I need gcrypt? (it was in Jack's test)
 
 
 
-
-void toObliv(protocolIO *io, operson *oFullData, person *fullData, int party)
+void dataToObliv(protocolIO *io, operson *oFullData, person *fullData, int party)
 {
+    uint8_t email[16];
     for(int i = 0;, i < io->numDataRecords; i++) {
-        oFullData[i].email = feedOblivChar(fullData[i], party);
-        oFullData[i].EUCitizenship = feedOblivChar(fullData[i], party);
-        oFullData[i].income = feedOblivChar(fullData[i], party);
+        email = (uint8_t)atoi(fullData[i].email); // does this work?
+        oFullData[i].email = feedOblivChar(email, party);
+        // the other two parts are just coppied over
+        oFullData[i].EUCitizenship = feedOblivChar(fullData[i].EUCitizenship, party);
+        oFullData[i].income = feedOblivChar(fullData[i].income, party);
     }    
 }
 
-void pseudonymize_data(protocolIO * io, struct operson * fullData);
-        // ADD AES KEY, also, I am not sure I need the two extra structs
+void pseudonymize_data(protocolIO * io, struct operson * fullData, obliv uint8_t key);
 
     int n = io->numDataRecords;
-    obliv char * tmpEncryptedEmail = char[128]; // this is going to store encrypted emails
+//  key = ; // ???? how do I generate this? (it definitely should not be hard coded)
+    obliv uint8_t encryptedEmail[16];
     for (int i = 0; i < n; i++) {
         // iterate through both structs and split them into the two kinds of data
         // the values can be OvlivRevealed one by one as they are iteraged through
@@ -35,14 +39,15 @@ void pseudonymize_data(protocolIO * io, struct operson * fullData);
 
         // populate pseudonymized data
         // the emails should be encrypted for pseudonymized data
-        tmpEncryptedEmail = itoa(n); // placeholder, this should be the encrypted value
-        revealOblivChar(&io->pseudonymizedData[n].encryptedEmail, tmpEncryptedEmail, 1);
+        oaes_128(encryptedEmail, key, fullData[i].email); // can I call this here? or does it need to be its own obliv? 
+        // (Jack passed the key to one party and the input to another??)
+        revealOblivChar(&io->pseudonymizedData[n].encryptedEmail, encryptedEmail, 1);
         revealOblivInt(&io->pseudonymizedData[n].income, fullData[n].income, 1);
         
+    // and the pseudonymized array should be shuffled -> I would have to do this before revealing it line by line
     }
-
-    // and the pseudonymized array should be shuffled 
-    //OvlivReveal the encryption key to party 2
+    //Reveal the encryption key to party 2
+    revealOblivInt(&io->key, key, 2);
     
 
 void pseudonymize(void * args)
@@ -53,22 +58,25 @@ void pseudonymize(void * args)
     struct person * fullData = malloc(sizeof(person) * io->numDataRecords);
     check_mem(fullData, ocCurrentParty());
 
-    // Results 
-    //struct operson oPseudonymizedData = malloc(sizeof(person) * io->numDataRecords)
-    //struct operson oNonIdentifiableData = malloc(sizeof(person) * io->numDataRecords)
-    // !!ADD IN AES Encryption Key
-
     load_data(io, &fullData, ocCurrentParty());
-    //check_input_count (not relevant for this operation, also not relevant for processing
+//  check_input_count (not relevant for this operation, also not relevant for processing
     // because the set intersection does not assume full personal data remains?)
 
-    // like fullData, but with obliv fields (defined in pseudonymize.h)
+    // Results (to be sent back)
+    // AES Encryption Key
+    obliv uint8_t key[16];
+    // where should the key be initialized? it should be randomized??
+
+//  //struct operson oPseudonymizedData = malloc(sizeof(person) * io->numDataRecords)
+//  //struct operson oNonIdentifiableData = malloc(sizeof(person) * io->numDataRecords)
+
+    // like fullData, but with obliv fields (defined in pseudonymize.h, sent into the pseudonymize_data function)
     struct operson * oFullData = malloc(sizeof(operson) * io->numDataRecords)
 
-    toObliv(io, oFullData, fullData, 1);
+    dataToObliv(io, oFullData, fullData, 1);
     free(fullData);
 
-    pseudonymize_data(io, oFullData); // add oAESEncryptionKey
+    pseudonymize_data(io, oFullData, key); // add oAESEncryptionKey
     free(oFullData);
-
+    // should I free okey too?
 }

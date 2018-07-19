@@ -20,7 +20,6 @@ void check_mem(person* fullData, int party)
     }
 }
 
-// still need to code a load_data function! (and this should be added to pseudonmyze.h)
 // I am trying to read a csv into an array of structs!
 
 void load_data(protocolIO *io, struct person ** fullData, int party) // 
@@ -91,36 +90,33 @@ int main(int argc, char *argv[])
 
     // Final initializations before entering protocl
     cp = (argv[2][0]=='1' ? 1 : 2);
-    setCurrentParty(&pd, cp); // only checks for a '1'
-    if (argc == 4) {  // this would only apply to the DCO
+    setCurrentParty(&pd, cp); // only checks for a '1' (this is okay because Obliv-C only supports 2 parties atm)
+    if (argc == 4) {  // this would only apply to the DC // party 1
         io.src = argv[3]; 
     }
     lap = wallClock();
 
-    execDualexProtocol(&pd, pseudonymize, &io); // Should this be Yao's or DualExecution? 
+    execYaoProtocol(&pd, pseudonymize, &io); // Should this be Yao's or DualExecution? 
     cleanupProtocol(&pd);
 
     double runtime = wallClock() - lap;
 
-    log_info("Total time: %1f seconds \n", runtime);
-    printf("\n");
-    // log_info("successful pseudonymization"??)
-    
     
     // code to create files (depends on party)
     if (cp == 1) {
         FILE *nonIdentifiableDataFile = fopen("nonidentifiable.csv", "w");        
         if (nonIdentifiableDataFile != NULL) {
             for(int i = 0; i < io->numFullData, i++) {
-                fprintf(nonIdentifiableDataFile, "%s,%d\n" io->nonIdentifiableData[i].email, io->nonIdentifiableData[i].EUCitizenship);
+                fprintf(nonIdentifiableDataFile, "%s,%d\n", (char)itoa(io->nonIdentifiableData[i].email), io->nonIdentifiableData[i].EUCitizenship);
             }
         }
         fclose(nonIdentifiableDataFile);
 
+        // THIS SHOULD BE UPDATED to print the encrypted hex values
         FILE *psudonymizedDataFile = fopen("pseudonmized.csv", "w");        
         if (psudonymizedDataFile != NULL) {
             for(int i = 0; i < io->numFullData, i++) {
-                fprintf(psudonymizedDataFile, "%s,%d\n" io->pseudonymizedData[i].encryptedEmail, io->pseudonymizedData[i].income);
+                fprintf(psudonymizedDataFile, "%s,%d\n", (char)itoa(io->pseudonymizedData[i].encryptedEmail), io->pseudonymizedData[i].income);
             }
         }
         fclose(pseudonymizedDataFile);
@@ -132,6 +128,9 @@ int main(int argc, char *argv[])
         }
     }
 
+    log_info("Pseudonymization Successful")
+    log_info("Total time: %1f seconds \n", runtime);
+    printf("\n");
     
     return 0;   
 

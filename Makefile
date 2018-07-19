@@ -10,12 +10,13 @@ PORT=1234
 REMOTE_HOST=localhost
 CONNECTION=$(REMOTE_HOST):$(PORT)
 
-# something like this...
-# test.oc test.c ../common/util.c (where is this?) $(RUNTIME)
-# 	$(OBLIVCC) $(CFLAGS) -I . test.oc test.c ../common/util.c $(LOADLIBES) ./pseudonymize.out:
+# something like this... (fix "test")
+# ./pseudonymize.out: test.oc test.c util.c $(ACKPATH)/build/lib/liback.a $(RUNTIME)
+# 	$(OBLIVCC) $(CFLAGS) -I . $(ACKPATH)/src/ test.oc test.c util.c $(LOADLIBES) pseudonymize.oc $(ACKPATH)/src/oaes.oc
 # what should I have in my util.c / util.h? maybe the wallClock?
 
-./pseudonymize.out:
+./pseudonymize.out: pseudonymize.oc pseudonymize.c util.c $(ACKPATH)/build/lib/liback.a $(RUNTIME)
+	$(OBLIVCC) $(CFLAGS) -I . $(ACKPATH)/src/ pseudonymize.oc pseudonymize.c $(LOADLIBES) $(ACKPATH)/src/oaes.oc
 
 ./process.out:
 
